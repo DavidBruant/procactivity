@@ -740,7 +740,7 @@ impl<W: Write> Tracer<W> {
                 }
         }
 
-        // if syscall is a close(), remove the fd from the hashmap
+        // if syscall is a close, remove the fd from the hashmap
         if syscall_info.syscall == Sysno::close {
 
             let fd: i32 = match &syscall_info.args.0[0] {
@@ -750,17 +750,56 @@ impl<W: Write> Tracer<W> {
                 SyscallArg::Addr(_) => panic!("First arg of close syscall should be a fd not an Addr"),
             };
 
-            let fd_to_pathname = match self.fd_to_fdtype_by_pid.get(&self.pid){
-                None => panic!("Missing fd_to_path for pid {}", &self.pid),
-                Some(fd_to_pathname) => fd_to_pathname
+            let fd_to_fdtype = match self.fd_to_fdtype_by_pid.get(&self.pid){
+                None => panic!("Missing fd_to_fdtype for pid {}", &self.pid),
+                Some(fd_to_fdtype) => fd_to_fdtype
             };
 
             self.fd_to_fdtype_by_pid = self.fd_to_fdtype_by_pid.update(
                 self.pid,
-                fd_to_pathname.without(&fd)
+                fd_to_fdtype.without(&fd)
             )
-
         }
+
+        // if syscall is a dup, dup2 or dup3, the syscall return value is the duplicated fs
+        if syscall_info.syscall == Sysno::dup || syscall_info.syscall == Sysno::dup2 || syscall_info.syscall == Sysno::dup3 {
+            
+            let returned_fd = match syscall_info.result {
+                RetCode::Ok(fd) => fd,
+                RetCode::Address(_) => panic!("return value of dup syscall ({}) shouldn't be an address", syscall_info.syscall),
+                RetCode::Err(_) => -1,
+            };
+
+            if returned_fd >= 0 {
+                let source_fd: i32 = match &syscall_info.args.0[0] {
+                    SyscallArg::Int(i) => *i as i32,
+                    SyscallArg::Str(_s) => panic!("First arg of dup/2/3 syscall should be a fd not a Str"),
+                    SyscallArg::StrVec(_items, _) => panic!("First arg of dup/2/3 syscall should be a fd not a StrVec"),
+                    SyscallArg::Addr(_) => panic!("First arg of dup/2/3 syscall should be a fd not an Addr"),
+                };
+
+                let fd_to_fdtype = match self.fd_to_fdtype_by_pid.get(&self.pid){
+                    None => panic!("Missing fd_to_fdtype for pid {}", &self.pid),
+                    Some(fd_to_fdtype) => fd_to_fdtype
+                };
+
+                let source_fd_fdtype = match fd_to_fdtype.get(&source_fd) {
+                    None => panic!("Missing fdtype for fd {}", &source_fd),
+                    Some(fdtype) => fdtype
+                };
+                
+                // duplicate fdtype
+                self.fd_to_fdtype_by_pid = self.fd_to_fdtype_by_pid.update(
+                    self.pid,
+                    fd_to_fdtype.update(returned_fd, source_fd_fdtype.clone())
+                )
+
+            }
+        }
+
+
+        todo!("Do fcntl syscall")
+
     }
 
     fn store_syscall_info(&mut self, syscall_info: SyscallInfo) -> () {
