@@ -1,5 +1,7 @@
 # procactivity
 
+⚠️ experimental, does not work yet, i'm learning Rust and writing tests
+
 Monitor process activity
 
 A simple tool to get a summary of a Linux process activity
