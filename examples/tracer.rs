@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use lurk_cli::{args::Args, Tracer};
+use procactivity::{args::Args, Tracer};
 use nix::unistd::{fork, ForkResult};
 use std::io;
 
@@ -8,7 +8,7 @@ fn main() -> Result<()> {
 
     let pid = match unsafe { fork() } {
         Ok(ForkResult::Child) => {
-            return lurk_cli::run_tracee(&[command], &[], &None);
+            return procactivity::run_tracee(&[command], &[], &None);
         }
         Ok(ForkResult::Parent { child }) => child,
         Err(err) => bail!("fork() failed: {err}"),

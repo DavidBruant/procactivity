@@ -18,8 +18,8 @@ mod tests {
     use anyhow::{Error, Result, bail};
     use nix::unistd::{fork, ForkResult};
     
-    use lurk_cli::args::{ArgCommand, Args};
-    use lurk_cli::{run_tracee, Tracer};
+    use procactivity::args::{ArgCommand, Args};
+    use procactivity::{run_tracee, Tracer};
 
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     //use super::*;
@@ -88,7 +88,7 @@ mod tests {
         let syscalls = tracer.syscall_infos;
 
         // perform filters to find the 'fstat'
-        let fstat_syscalls: Vec<&lurk_cli::syscall_info::SyscallInfo> = syscalls.iter().filter(|&si| si.syscall == Sysno::fstat).collect();
+        let fstat_syscalls: Vec<&procactivity::syscall_info::SyscallInfo> = syscalls.iter().filter(|&si| si.syscall == Sysno::fstat).collect();
 
         assert!(fstat_syscalls.len() >= 1, "At least one call to fstat during call to ls");
 

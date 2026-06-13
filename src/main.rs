@@ -6,8 +6,8 @@ use clap::{CommandFactory, Parser};
 use nix::sys::ptrace;
 use nix::unistd::{fork, ForkResult, Pid};
 
-use lurk_cli::args::{ArgCommand, Args};
-use lurk_cli::{run_tracee, Tracer};
+use procactivity::args::{ArgCommand, Args};
+use procactivity::{run_tracee, Tracer};
 
 fn main() -> Result<()> {
     let config = Args::parse();
