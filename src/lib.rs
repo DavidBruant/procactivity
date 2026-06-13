@@ -71,6 +71,7 @@ use comfy_table::{Cell, ContentArrangement, Row, Table};
 use im::HashMap as ImmHashMap;
 use std::collections::HashMap;
 use libc::user_regs_struct;
+use libc::{F_DUPFD, F_DUPFD_CLOEXEC};
 use nix::sys::personality::{self, Persona};
 use nix::sys::ptrace::{self, Event};
 use nix::sys::signal::Signal;
@@ -797,8 +798,51 @@ impl<W: Write> Tracer<W> {
             }
         }
 
+        // if syscall is fcntl with argument, the syscall return value is the duplicated fs
+        if syscall_info.syscall == Sysno::fcntl {
+            let op = match &syscall_info.args.0[1] {
+                SyscallArg::Int(i) => *i as i32,
+                SyscallArg::Str(_s) => panic!("Second arg of fcntl syscall should be an int, not a Str"),
+                SyscallArg::StrVec(_items, _) => panic!("Second arg of fcntl syscall should be an int, not a StrVec"),
+                SyscallArg::Addr(_) => panic!("Second arg of fcntl syscall should be an int, not an Addr"),
+            };
 
-        todo!("Do fcntl syscall")
+            if op == F_DUPFD || op == F_DUPFD_CLOEXEC {
+                let returned_fd = match syscall_info.result {
+                    RetCode::Ok(fd) => fd,
+                    RetCode::Address(_) => panic!("return value of dup syscall ({}) shouldn't be an address", syscall_info.syscall),
+                    RetCode::Err(_) => -1,
+                };
+
+                if returned_fd >= 0 {
+                    let source_fd = match &syscall_info.args.0[0] {
+                        SyscallArg::Int(i) => *i as i32,
+                        SyscallArg::Str(_s) => panic!("First arg of fcntl syscall should be an int, not a Str"),
+                        SyscallArg::StrVec(_items, _) => panic!("First arg of fcntl syscall should be an int, not a StrVec"),
+                        SyscallArg::Addr(_) => panic!("First arg of fcntl syscall should be an int, not an Addr"),
+                    };
+
+                    let fd_to_fdtype = match self.fd_to_fdtype_by_pid.get(&self.pid){
+                        None => panic!("Missing fd_to_fdtype for pid {}", &self.pid),
+                        Some(fd_to_fdtype) => fd_to_fdtype
+                    };
+
+                    let source_fd_fdtype = match fd_to_fdtype.get(&source_fd) {
+                        None => panic!("Missing fdtype for fd {}", &source_fd),
+                        Some(fdtype) => fdtype
+                    };
+
+                    self.fd_to_fdtype_by_pid = self.fd_to_fdtype_by_pid.update(
+                        self.pid,
+                        fd_to_fdtype.update(returned_fd, source_fd_fdtype.clone())
+                    )
+                }
+
+            }
+
+
+        }
+
 
     }
 
