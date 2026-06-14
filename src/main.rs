@@ -9,7 +9,12 @@ use nix::unistd::{fork, ForkResult, Pid};
 use procactivity::args::{ArgCommand, Args};
 use procactivity::{run_tracee, Tracer};
 
+
+
 fn main() -> Result<()> {
+    
+    todo!("Nettoyer les arguments + afficher les 3 listes");
+    
     let config = Args::parse();
     let pid = if let Some(ArgCommand::Command(command)) = &config.command {
         if command.is_empty() {

@@ -8,7 +8,7 @@ repository = "github.com/DavidBruant/procactivity"
 edition = "2021"
 
 [[bin]]
-name = "lurk"
+name = "procactivity"
 path = "src/main.rs"
 
 [features]
