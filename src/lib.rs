@@ -79,7 +79,6 @@ use std::os::unix::process::CommandExt;
 use std::process::{Command, Stdio};
 use std::time::{Duration, SystemTime};
 use syscalls::{Sysno, SysnoMap, SysnoSet};
-use uzers::get_user_by_name;
 
 use crate::args::{Args, Filter};
 use crate::syscall_info::{FdToFdtype, FdType, RetCode, SyscallArg, SyscallArgs, SyscallInfo};
@@ -791,7 +790,7 @@ impl<W: Write> Tracer<W> {
     }
 }
 
-pub fn run_tracee(command: &[String], username: &Option<String>) -> Result<()> {
+pub fn run_tracee(command: &[String]) -> Result<()> {
     ptrace::traceme()?;
     // Stop ourselves so the tracer parent can set ptrace options before exec.
     // This improves reliability of capturing the initial execve syscall arguments.
@@ -814,12 +813,6 @@ pub fn run_tracee(command: &[String], username: &Option<String>) -> Result<()> {
     }
     let mut cmd = Command::new(binary);
     cmd.args(command[1..].iter()).stdout(Stdio::null());
-
-    if let Some(username) = username {
-        if let Some(user) = get_user_by_name(username) {
-            cmd.uid(user.uid());
-        }
-    }
 
     let _ = cmd.exec();
 

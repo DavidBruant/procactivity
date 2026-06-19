@@ -15,9 +15,6 @@ use syscalls::{Sysno, SysnoSet};
 #[derive(Parser, Debug, Default)]
 #[command(name = "procactivity", about, version, allow_external_subcommands = true)]
 pub struct Args {
-    /// Run the command with uid, gid and supplementary groups of username.
-    #[arg(short, long)]
-    pub username: Option<String>,
     /// Trace child processes as they are created by currently traced processes.
     #[arg(short, long)]
     pub follow_forks: bool,

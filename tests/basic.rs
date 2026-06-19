@@ -48,7 +48,6 @@ mod tests {
         // create Trace instance manually
         // fed it "ls"
         let config= Args::from({Args {
-            username: None, 
             follow_forks: true, 
             syscall_times: false, 
             expr: Vec::new(), 
@@ -59,7 +58,7 @@ mod tests {
 
         let child_pid = {
             match unsafe { fork() } {
-                Ok(ForkResult::Child) => return run_tracee(&command, &None),
+                Ok(ForkResult::Child) => return run_tracee(&command),
                 Ok(ForkResult::Parent { child }) => child,
                 Err(err) => bail!("fork() failed: {err}"),
             }
@@ -91,7 +90,6 @@ mod tests {
         let command = [String::from("cat"), String::from(".gitignore")];
 
         let config= Args::from({Args { 
-            username: None, 
             follow_forks: true, 
             syscall_times: false, 
             expr: Vec::new(), 
@@ -102,7 +100,7 @@ mod tests {
 
         let child_pid = {
             match unsafe { fork() } {
-                Ok(ForkResult::Child) => return run_tracee(&command, &None),
+                Ok(ForkResult::Child) => return run_tracee(&command),
                 Ok(ForkResult::Parent { child }) => child,
                 Err(err) => bail!("fork() failed: {err}"),
             }
@@ -136,7 +134,6 @@ mod tests {
         let command = [String::from("less"), String::from(".gitignore")];
 
         let config= Args::from({Args { 
-            username: None, 
             follow_forks: true, 
             syscall_times: false, 
             expr: Vec::new(), 
@@ -147,7 +144,7 @@ mod tests {
 
         let child_pid = {
             match unsafe { fork() } {
-                Ok(ForkResult::Child) => return run_tracee(&command, &None),
+                Ok(ForkResult::Child) => return run_tracee(&command),
                 Ok(ForkResult::Parent { child }) => child,
                 Err(err) => bail!("fork() failed: {err}"),
             }
@@ -181,7 +178,6 @@ mod tests {
         let command = [String::from("tests/simple-write.sh")];
 
         let config= Args::from({Args {
-            username: None, 
             follow_forks: true, 
             syscall_times: false, 
             expr: Vec::new(), 
@@ -192,7 +188,7 @@ mod tests {
 
         let child_pid = {
             match unsafe { fork() } {
-                Ok(ForkResult::Child) => return run_tracee(&command, &None),
+                Ok(ForkResult::Child) => return run_tracee(&command),
                 Ok(ForkResult::Parent { child }) => child,
                 Err(err) => bail!("fork() failed: {err}"),
             }
