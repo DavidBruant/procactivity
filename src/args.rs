@@ -18,9 +18,7 @@ pub struct Args {
     /// Trace child processes as they are created by currently traced processes.
     #[arg(short, long)]
     pub follow_forks: bool,
-    /// Show the time spent in system calls in ms.
-    #[arg(short = 'T', long)]
-    pub syscall_times: bool,
+    
     /// A qualifying expression which modifies which events to trace or how to trace them.
     #[arg(short, long)]
     pub expr: Vec<String>,

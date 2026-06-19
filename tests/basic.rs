@@ -49,7 +49,6 @@ mod tests {
         // fed it "ls"
         let config= Args::from({Args {
             follow_forks: true, 
-            syscall_times: false, 
             expr: Vec::new(), 
             json: false, 
             collapse_exec_retries: false, 
@@ -91,7 +90,6 @@ mod tests {
 
         let config= Args::from({Args { 
             follow_forks: true, 
-            syscall_times: false, 
             expr: Vec::new(), 
             json: false, 
             collapse_exec_retries: false,
@@ -135,7 +133,6 @@ mod tests {
 
         let config= Args::from({Args { 
             follow_forks: true, 
-            syscall_times: false, 
             expr: Vec::new(), 
             json: false, 
             collapse_exec_retries: false,
@@ -179,7 +176,6 @@ mod tests {
 
         let config= Args::from({Args {
             follow_forks: true, 
-            syscall_times: false, 
             expr: Vec::new(), 
             json: false, 
             collapse_exec_retries: false,
