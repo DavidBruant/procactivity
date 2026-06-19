@@ -18,13 +18,11 @@ pub struct Args {
     /// Trace child processes as they are created by currently traced processes.
     #[arg(short, long)]
     pub follow_forks: bool,
-    
+
     /// A qualifying expression which modifies which events to trace or how to trace them.
     #[arg(short, long)]
     pub expr: Vec<String>,
-    /// Display output in JSON format
-    #[arg(short, long)]
-    pub json: bool,
+    
     /// Collapse repeated failing `execve` attempts and only show final success
     #[arg(long)]
     pub collapse_exec_retries: bool,

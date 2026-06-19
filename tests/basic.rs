@@ -50,7 +50,6 @@ mod tests {
         let config= Args::from({Args {
             follow_forks: true, 
             expr: Vec::new(), 
-            json: false, 
             collapse_exec_retries: false, 
             command: Some(ArgCommand::Command(vec![])),
         }});
@@ -91,7 +90,6 @@ mod tests {
         let config= Args::from({Args { 
             follow_forks: true, 
             expr: Vec::new(), 
-            json: false, 
             collapse_exec_retries: false,
             command: Some(ArgCommand::Command(vec![])),
         }});
@@ -134,7 +132,6 @@ mod tests {
         let config= Args::from({Args { 
             follow_forks: true, 
             expr: Vec::new(), 
-            json: false, 
             collapse_exec_retries: false,
             command: Some(ArgCommand::Command(vec![])),
         }});
@@ -177,7 +174,6 @@ mod tests {
         let config= Args::from({Args {
             follow_forks: true, 
             expr: Vec::new(), 
-            json: false, 
             collapse_exec_retries: false,
             command: Some(ArgCommand::Command(vec![])),
         }});
