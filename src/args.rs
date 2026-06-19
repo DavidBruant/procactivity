@@ -15,9 +15,6 @@ use syscalls::{Sysno, SysnoSet};
 #[derive(Parser, Debug, Default)]
 #[command(name = "procactivity", about, version, allow_external_subcommands = true)]
 pub struct Args {
-    /// --env var=val adds an environment variable. --env var removes an environment variable.
-    #[arg(short = 'E', long)]
-    pub env: Vec<String>,
     /// Run the command with uid, gid and supplementary groups of username.
     #[arg(short, long)]
     pub username: Option<String>,

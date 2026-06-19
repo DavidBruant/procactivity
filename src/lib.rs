@@ -791,7 +791,7 @@ impl<W: Write> Tracer<W> {
     }
 }
 
-pub fn run_tracee(command: &[String], envs: &[String], username: &Option<String>) -> Result<()> {
+pub fn run_tracee(command: &[String], username: &Option<String>) -> Result<()> {
     ptrace::traceme()?;
     // Stop ourselves so the tracer parent can set ptrace options before exec.
     // This improves reliability of capturing the initial execve syscall arguments.
@@ -814,15 +814,6 @@ pub fn run_tracee(command: &[String], envs: &[String], username: &Option<String>
     }
     let mut cmd = Command::new(binary);
     cmd.args(command[1..].iter()).stdout(Stdio::null());
-
-    for token in envs {
-        let mut parts = token.splitn(2, '=');
-        match (parts.next(), parts.next()) {
-            (Some(key), Some(value)) => cmd.env(key, value),
-            (Some(key), None) => cmd.env_remove(key),
-            _ => unreachable!(),
-        };
-    }
 
     if let Some(username) = username {
         if let Some(user) = get_user_by_name(username) {

@@ -20,7 +20,7 @@ fn main() -> Result<()> {
         // FIXME: I suspect this breaks Rust's safety: fork() spawn a thread and that thread
         //        is accessing the same memory as the parent thread (command/env/username/config)
         match unsafe { fork() } {
-            Ok(ForkResult::Child) => return run_tracee(command, &config.env, &config.username),
+            Ok(ForkResult::Child) => return run_tracee(command, &config.username),
             Ok(ForkResult::Parent { child }) => child,
             Err(err) => bail!("fork() failed: {err}"),
         }

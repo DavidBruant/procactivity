@@ -8,7 +8,7 @@ fn main() -> Result<()> {
 
     let pid = match unsafe { fork() } {
         Ok(ForkResult::Child) => {
-            return procactivity::run_tracee(&[command], &[], &None);
+            return procactivity::run_tracee(&[command], &None);
         }
         Ok(ForkResult::Parent { child }) => child,
         Err(err) => bail!("fork() failed: {err}"),
