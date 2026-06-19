@@ -9,22 +9,12 @@ use clap::{Parser, Subcommand};
 use libc::pid_t;
 use regex::Regex;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::str::FromStr;
 use syscalls::{Sysno, SysnoSet};
 
 #[derive(Parser, Debug, Default)]
 #[command(name = "procactivity", about, version, allow_external_subcommands = true)]
 pub struct Args {
-    /// Name of the file to print output to
-    #[arg(short = 'o', long)]
-    pub file: Option<PathBuf>,
-    /// Report a summary instead of the regular output
-    #[arg(short = 'c', long)]
-    pub summary_only: bool,
-    /// Report a summary in addition to the regular output
-    #[arg(short = 'C', long, conflicts_with = "summary_only")]
-    pub summary: bool,
     /// Print only syscalls that returned without an error code
     #[arg(short = 'z', long)]
     pub successful_only: bool,

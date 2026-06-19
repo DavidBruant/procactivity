@@ -1,5 +1,4 @@
-use std::fs::OpenOptions;
-use std::io::{BufWriter, Write};
+use std::io::{Write};
 
 use anyhow::{bail, Result};
 use clap::{CommandFactory, Parser};
@@ -31,16 +30,7 @@ fn main() -> Result<()> {
     };
 
     // TODO: we may also add a --color option to force colors, and a --no-color option to disable it
-    let output: Box<dyn Write> = if let Some(filepath) = &config.file {
-        Box::new(BufWriter::new(
-            OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(filepath)?,
-        ))
-    } else {
-        Box::new(std::io::stdout())
-    };
+    let output: Box<dyn Write> = Box::new(std::io::stdout());
 
     Tracer::new(pid, config, output)?.run_tracer()
 }
