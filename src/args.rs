@@ -7,10 +7,12 @@ use syscalls::{SysnoSet};
 #[command(name = "procactivity", about, version, allow_external_subcommands = true)]
 pub struct Args {
     /// Trace child processes as they are created by currently traced processes.
+    /// TODO: This will be removed. Need forked process tests beforehand
     #[arg(short, long)]
     pub follow_forks: bool,
     
     /// Collapse repeated failing `execve` attempts and only show final success
+    /// TODO: This will be removed. Need forked process tests beforehand
     #[arg(long)]
     pub collapse_exec_retries: bool,
 
