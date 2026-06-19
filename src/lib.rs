@@ -1,4 +1,4 @@
-//! lurk is a pretty (simple) alternative to strace.
+//! procactivity is a way to trace a process activity
 //!
 //! ## Installation
 //!
@@ -6,7 +6,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! lurk-cli = "0.3.6"
+//! procactivity-cli = "0.3.6"
 //! nix = { version = "0.27.1", features = ["ptrace", "signal"] }
 //! console = "0.15.8"
 //! ```

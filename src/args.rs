@@ -14,20 +14,8 @@ use std::str::FromStr;
 use syscalls::{Sysno, SysnoSet};
 
 #[derive(Parser, Debug, Default)]
-#[command(name = "lurk", about, version, allow_external_subcommands = true)]
+#[command(name = "procactivity", about, version, allow_external_subcommands = true)]
 pub struct Args {
-    /// Display system call numbers
-    #[arg(short = 'n', long)]
-    pub syscall_number: bool,
-    /// Attach to a running process
-    #[arg(short = 'p', long)]
-    pub attach: Option<pid_t>,
-    /// Print un-abbreviated versions of strings
-    #[arg(short = 'v', long)]
-    pub no_abbrev: bool,
-    /// Maximum string argument size to print
-    #[arg(short, long, conflicts_with = "no_abbrev")]
-    pub string_limit: Option<usize>,
     /// Name of the file to print output to
     #[arg(short = 'o', long)]
     pub file: Option<PathBuf>,
@@ -226,7 +214,7 @@ mod tests {
 
     #[test]
     fn test_args_simple() {
-        let args = Args::parse_from(["lurk", "app"]);
+        let args = Args::parse_from(["procactivity", "app"]);
         assert_eq!(
             args.command,
             Some(ArgCommand::Command(vec!["app".to_string()])),

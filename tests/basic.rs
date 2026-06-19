@@ -40,18 +40,14 @@ mod tests {
 
 
     #[test]
-    fn lurk_tracer_ls() -> Result<(), Error> {
+    fn procactivity_tracer_ls() -> Result<(), Error> {
         let command = [String::from("ls")];
 
-        println!("TEST lurk_tracer_ls");
+        println!("TEST procactivity_tracer_ls");
 
         // create Trace instance manually
         // fed it "ls"
-        let config= Args::from({Args { 
-            syscall_number: false, 
-            attach: None, 
-            no_abbrev: false, 
-            string_limit: None, 
+        let config= Args::from({Args {
             file: None, 
             summary_only: false, 
             summary: false, 
@@ -77,12 +73,12 @@ mod tests {
 
         let output: Box<dyn Write> = Box::new(std::io::stdout());
 
-        println!("TEST lurk_tracer_ls - tracer.run_tracer");
+        println!("TEST procactivity_tracer_ls - tracer.run_tracer");
 
         let mut tracer = Tracer::new(child_pid, config, output)?;
         let _ = tracer.run_tracer();
 
-        println!("TEST lurk_tracer_ls - after tracer.run_tracer");
+        println!("TEST procactivity_tracer_ls - after tracer.run_tracer");
 
         // get tracer.syscall_infos.
         let syscalls = tracer.syscall_infos;
@@ -101,10 +97,6 @@ mod tests {
         let command = [String::from("cat"), String::from(".gitignore")];
 
         let config= Args::from({Args { 
-            syscall_number: false, 
-            attach: None, 
-            no_abbrev: false, 
-            string_limit: None, 
             file: None, 
             summary_only: false, 
             summary: false, 
@@ -156,10 +148,6 @@ mod tests {
         let command = [String::from("less"), String::from(".gitignore")];
 
         let config= Args::from({Args { 
-            syscall_number: false, 
-            attach: None, 
-            no_abbrev: false, 
-            string_limit: None, 
             file: None, 
             summary_only: false, 
             summary: false, 
@@ -211,10 +199,6 @@ mod tests {
         let command = [String::from("tests/simple-write.sh")];
 
         let config= Args::from({Args { 
-            syscall_number: false, 
-            attach: None, 
-            no_abbrev: false, 
-            string_limit: None, 
             file: None, 
             summary_only: false, 
             summary: false, 
