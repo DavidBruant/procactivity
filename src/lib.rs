@@ -538,7 +538,7 @@ impl<W: Write> Tracer<W> {
             }
         }
 
-        if self.filter.matches(syscall_number, ret_code) {
+        if self.filter.matches(syscall_number) {
             let elapsed = syscall_start_time.map_or(Duration::default(), |start_time| {
                 let end_time = syscall_end_time.unwrap_or(SystemTime::now());
                 end_time.duration_since(start_time).unwrap_or_default()

@@ -3,7 +3,7 @@ use crate::arch::{
     TRACE_LSTAT, TRACE_MEMORY, TRACE_NETWORK, TRACE_PROCESS, TRACE_PURE, TRACE_SIGNAL, TRACE_STAT,
     TRACE_STATFS, TRACE_STATFS_LIKE, TRACE_STAT_LIKE,
 };
-use crate::syscall_info::RetCode;
+
 use anyhow::bail;
 use clap::{Parser, Subcommand};
 use libc::pid_t;
@@ -15,12 +15,6 @@ use syscalls::{Sysno, SysnoSet};
 #[derive(Parser, Debug, Default)]
 #[command(name = "procactivity", about, version, allow_external_subcommands = true)]
 pub struct Args {
-    /// Print only syscalls that returned without an error code
-    #[arg(short = 'z', long)]
-    pub successful_only: bool,
-    /// Print only syscalls that returned with an error code
-    #[arg(short = 'Z', long, conflicts_with = "successful_only")]
-    pub failed_only: bool,
     /// --env var=val adds an environment variable. --env var removes an environment variable.
     #[arg(short = 'E', long)]
     pub env: Vec<String>,
@@ -135,13 +129,7 @@ impl Args {
             }
         }
         Ok(Filter {
-            ret_code_filter: if self.successful_only {
-                FilterRetCode::Oks
-            } else if self.failed_only {
-                FilterRetCode::Errs
-            } else {
-                FilterRetCode::All
-            },
+            ret_code_filter: FilterRetCode::All,
             sysno_filter: if system_calls.count() == 0 {
                 FilterSysno::All
             } else if expr_negation {
@@ -155,8 +143,6 @@ impl Args {
 
 enum FilterRetCode {
     All,
-    Oks,
-    Errs,
 }
 
 enum FilterSysno {
@@ -171,13 +157,11 @@ pub struct Filter {
 }
 
 impl Filter {
-    pub fn matches(&mut self, sys_no: Sysno, res: RetCode) -> bool {
+    pub fn matches(&mut self, sys_no: Sysno) -> bool {
         (
             // Should this result code be printed?
             match self.ret_code_filter {
                 FilterRetCode::All => true,
-                FilterRetCode::Oks => matches!(res, RetCode::Ok(_) | RetCode::Address(_)),
-                FilterRetCode::Errs => matches!(res, RetCode::Err(_)),
             }
         ) && (
             // Should this sys_no be printed?

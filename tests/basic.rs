@@ -48,8 +48,6 @@ mod tests {
         // create Trace instance manually
         // fed it "ls"
         let config= Args::from({Args {
-            successful_only: false, 
-            failed_only: false, 
             env: Vec::new(), 
             username: None, 
             follow_forks: true, 
@@ -94,8 +92,6 @@ mod tests {
         let command = [String::from("cat"), String::from(".gitignore")];
 
         let config= Args::from({Args { 
-            successful_only: false, 
-            failed_only: false, 
             env: Vec::new(), 
             username: None, 
             follow_forks: true, 
@@ -142,8 +138,6 @@ mod tests {
         let command = [String::from("less"), String::from(".gitignore")];
 
         let config= Args::from({Args { 
-            successful_only: false, 
-            failed_only: false, 
             env: Vec::new(), 
             username: None, 
             follow_forks: true, 
@@ -190,8 +184,6 @@ mod tests {
         let command = [String::from("tests/simple-write.sh")];
 
         let config= Args::from({Args {
-            successful_only: false, 
-            failed_only: false, 
             env: Vec::new(), 
             username: None, 
             follow_forks: true, 
