@@ -10,8 +10,21 @@ A simple tool to get a summary of a Linux process activity
 Started as a fork of [lurk](https://github.com/JakWai01/lurk)
 
 
+## Install and build
 
-## Usage (eventually)
+[Install rust/cargo](https://rust-lang.org/tools/install/)
+
+```sh
+git clone git@github.com:DavidBruant/procactivity.git
+cd procactivity
+cargo build --release
+```
+
+The executable is at `target/release/procactivity`
+
+
+
+## Usage 
 
 ```sh
 procactivity <command>
@@ -21,8 +34,10 @@ This command produces a report of process activity:
 - List of files opened
 - List of files read
 - List of files written to
-- List of [origins](https://html.spec.whatwg.org/multipage/browsers.html#concept-origin) (and IP addresses the hostname they resolved to) accessed
-- List of commands of sub-processes
+- (eventually) List of [origins](https://html.spec.whatwg.org/multipage/browsers.html#concept-origin) (and IP addresses the hostname they resolved to) accessed
+- (eventually) List of commands of sub-processes
+
+
 
 
 

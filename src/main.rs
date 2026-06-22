@@ -1,12 +1,11 @@
 use std::io::{Write};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use clap::{CommandFactory, Parser};
 use nix::unistd::{fork, ForkResult};
 
 use procactivity::args::{ArgCommand, Args};
 use procactivity::{run_tracee, Tracer};
-
 
 
 fn main() -> Result<()> {
@@ -32,5 +31,36 @@ fn main() -> Result<()> {
     // TODO: we may also add a --color option to force colors, and a --no-color option to disable it
     let output: Box<dyn Write> = Box::new(std::io::stdout());
 
-    Tracer::new(pid, config, output)?.run_tracer()
+    let mut tracer = match Tracer::new(pid, config, output)  {
+        Err(_) => panic!("Error during Tracer::new"),
+        Ok(t) => t
+    };
+
+    let _ = tracer.run_tracer();
+
+    // display output
+    println!("__Files attempted to be opened (openat syscall):__");
+
+    let attempted_opened_filepaths = tracer.get_opened_files().unwrap();
+    for filepath in attempted_opened_filepaths {
+        println!("{}", filepath);
+    }
+
+
+    println!("\n__Files read (read syscall)__");
+
+    let read_filepaths = tracer.get_read_files().unwrap();
+    for filepath in read_filepaths {
+        println!("{}", filepath);
+    }
+
+    
+    println!("\n__Files written to (write syscall)__");
+    
+    let written_to_filepaths = tracer.get_written_files().unwrap();
+    for filepath in written_to_filepaths.clone() {
+        println!("{}", filepath);
+    }
+
+    Ok(())
 }
