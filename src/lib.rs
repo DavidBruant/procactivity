@@ -1,4 +1,4 @@
-//! lurk is a pretty (simple) alternative to strace.
+//! procactivity is a way to trace a process activity
 //!
 //! ## Installation
 //!
@@ -6,7 +6,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! lurk-cli = "0.3.6"
+//! procactivity-cli = "0.3.6"
 //! nix = { version = "0.27.1", features = ["ptrace", "signal"] }
 //! console = "0.15.8"
 //! ```
@@ -64,10 +64,6 @@ pub mod style;
 pub mod syscall_info;
 
 use anyhow::{anyhow, Result};
-use comfy_table::modifiers::UTF8_ROUND_CORNERS;
-use comfy_table::presets::UTF8_BORDERS_ONLY;
-use comfy_table::CellAlignment::Right;
-use comfy_table::{Cell, ContentArrangement, Row, Table};
 use im::HashMap as ImmHashMap;
 use std::collections::HashMap;
 use libc::user_regs_struct;
@@ -83,7 +79,6 @@ use std::os::unix::process::CommandExt;
 use std::process::{Command, Stdio};
 use std::time::{Duration, SystemTime};
 use syscalls::{Sysno, SysnoMap, SysnoSet};
-use uzers::get_user_by_name;
 
 use crate::args::{Args, Filter};
 use crate::syscall_info::{FdToFdtype, FdType, RetCode, SyscallArg, SyscallArgs, SyscallInfo};
@@ -208,10 +203,6 @@ impl<W: Write> Tracer<W> {
                     if signal == Signal::SIGSTOP {
                         if self.args.follow_forks {
                             start_times.insert(pid, None);
-
-                            if !self.args.summary_only {
-                                writeln!(&mut self.output, "Attaching to child {}", pid,)?;
-                            }
                         }
 
                         self.issue_ptrace_syscall_request(pid, None)?;
@@ -341,103 +332,6 @@ impl<W: Write> Tracer<W> {
                 }
             }
         }
-
-        
-        if !self.args.json && (self.args.summary_only || self.args.summary) {
-            if !self.args.summary_only {
-                // Make a gap between the last syscall and the summary
-                writeln!(&mut self.output)?;
-            }
-            self.report_summary()?;
-        }
-
-
-        Ok(())
-    }
-
-    pub fn report_summary(&mut self) -> Result<()> {
-        let headers = vec!["% time", "time", "time/call", "calls", "errors", "syscall"];
-        let mut table = Table::new();
-        table
-            .load_preset(UTF8_BORDERS_ONLY)
-            .apply_modifier(UTF8_ROUND_CORNERS)
-            .set_content_arrangement(ContentArrangement::Dynamic)
-            .set_header(&headers);
-
-        for i in 0..headers.len() {
-            table.column_mut(i).unwrap().set_cell_alignment(Right);
-        }
-
-        let mut sorted_sysno: Vec<_> = self.filter.all_enabled().iter().collect();
-        sorted_sysno.sort_by_key(|k| k.name());
-        let t_time: Duration = self.syscalls_time.values().sum();
-
-        for sysno in sorted_sysno {
-            let (Some(pass), Some(fail), Some(time)) = (
-                self.syscalls_pass.get(sysno),
-                self.syscalls_fail.get(sysno),
-                self.syscalls_time.get(sysno),
-            ) else {
-                continue;
-            };
-
-            let calls = pass + fail;
-            if calls == 0 {
-                continue;
-            }
-
-            let time_percent = if !t_time.is_zero() {
-                time.as_secs_f32() / t_time.as_secs_f32() * 100f32
-            } else {
-                0f32
-            };
-
-            table.add_row(vec![
-                Cell::new(format!("{time_percent:.1}%")),
-                Cell::new(format!("{}µs", time.as_micros())),
-                Cell::new(format!("{:.1}ns", time.as_nanos() as f64 / calls as f64)),
-                Cell::new(format!("{calls}")),
-                Cell::new(format!("{fail}")),
-                Cell::new(sysno.name()),
-            ]);
-        }
-
-        // Create the totals row, but don't add it to the table yet
-        let failed = self.syscalls_fail.values().sum::<u64>();
-        let calls: u64 = self.syscalls_pass.values().sum::<u64>() + failed;
-        let totals: Row = vec![
-            Cell::new("100%"),
-            Cell::new(format!("{}µs", t_time.as_micros())),
-            Cell::new(format!("{:.1}ns", t_time.as_nanos() as f64 / calls as f64)),
-            Cell::new(calls),
-            Cell::new(failed.to_string()),
-            Cell::new("total"),
-        ]
-        .into();
-
-        // TODO: consider using another table-creating crate
-        //       https://github.com/Nukesor/comfy-table/issues/104
-        // This is a hack to add a line between the table and the summary,
-        // computing max column width of each existing row plus the totals row
-        let divider_row: Vec<String> = table
-            .column_max_content_widths()
-            .iter()
-            .copied()
-            .enumerate()
-            .map(|(idx, val)| {
-                let cell_at_idx = totals.cell_iter().nth(idx).unwrap();
-                (val as usize).max(cell_at_idx.content().len())
-            })
-            .map(|v| str::repeat("-", v))
-            .collect();
-        table.add_row(divider_row);
-        table.add_row(totals);
-
-        if !self.args.summary_only {
-            // separate a list of syscalls from the summary table with an blank line
-            writeln!(&mut self.output)?;
-        }
-        writeln!(&mut self.output, "{table}")?;
 
         Ok(())
     }
@@ -643,7 +537,7 @@ impl<W: Write> Tracer<W> {
             }
         }
 
-        if self.filter.matches(syscall_number, ret_code) {
+        if self.filter.matches() {
             let elapsed = syscall_start_time.map_or(Duration::default(), |start_time| {
                 let end_time = syscall_end_time.unwrap_or(SystemTime::now());
                 end_time.duration_since(start_time).unwrap_or_default()
@@ -653,26 +547,24 @@ impl<W: Write> Tracer<W> {
                 self.syscalls_time[syscall_number] += elapsed;
             }
 
-            if !self.args.summary_only {
-                let fd_to_pathname = match self.fd_to_fdtype_by_pid.get(&pid) {
-                    None => panic!("No fd_to_path found for pid {}", pid),
-                    Some(map) => map
-                };
+            let fd_to_pathname = match self.fd_to_fdtype_by_pid.get(&pid) {
+                None => panic!("No fd_to_path found for pid {}", pid),
+                Some(map) => map
+            };
 
-                // Use pre-parsed args if provided (captured at entry), otherwise parse now.
-                let args = pre_parsed_args
-                    .unwrap_or_else(|| arch::parse_args(pid, syscall_number, registers));
-                let info = SyscallInfo {
-                    typ: "SYSCALL",
-                    pid,
-                    syscall: syscall_number,
-                    args,
-                    result: ret_code,
-                    duration: elapsed,
-                    fd_to_fdtype: fd_to_pathname.clone() // maybe this clone is a performance problem. Maybe not
-                };
-                self.store_syscall_info(info);
-            }
+            // Use pre-parsed args if provided (captured at entry), otherwise parse now.
+            let args = pre_parsed_args
+                .unwrap_or_else(|| arch::parse_args(pid, syscall_number, registers));
+            let info = SyscallInfo {
+                typ: "SYSCALL",
+                pid,
+                syscall: syscall_number,
+                args,
+                result: ret_code,
+                duration: elapsed,
+                fd_to_fdtype: fd_to_pathname.clone() // maybe this clone is a performance problem. Maybe not
+            };
+            self.store_syscall_info(info);
         }
 
         Ok(())
@@ -898,7 +790,7 @@ impl<W: Write> Tracer<W> {
     }
 }
 
-pub fn run_tracee(command: &[String], envs: &[String], username: &Option<String>) -> Result<()> {
+pub fn run_tracee(command: &[String]) -> Result<()> {
     ptrace::traceme()?;
     // Stop ourselves so the tracer parent can set ptrace options before exec.
     // This improves reliability of capturing the initial execve syscall arguments.
@@ -921,21 +813,6 @@ pub fn run_tracee(command: &[String], envs: &[String], username: &Option<String>
     }
     let mut cmd = Command::new(binary);
     cmd.args(command[1..].iter()).stdout(Stdio::null());
-
-    for token in envs {
-        let mut parts = token.splitn(2, '=');
-        match (parts.next(), parts.next()) {
-            (Some(key), Some(value)) => cmd.env(key, value),
-            (Some(key), None) => cmd.env_remove(key),
-            _ => unreachable!(),
-        };
-    }
-
-    if let Some(username) = username {
-        if let Some(user) = get_user_by_name(username) {
-            cmd.uid(user.uid());
-        }
-    }
 
     let _ = cmd.exec();
 

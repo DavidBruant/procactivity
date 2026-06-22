@@ -40,36 +40,22 @@ mod tests {
 
 
     #[test]
-    fn lurk_tracer_ls() -> Result<(), Error> {
+    fn procactivity_tracer_ls() -> Result<(), Error> {
         let command = [String::from("ls")];
 
-        println!("TEST lurk_tracer_ls");
+        println!("TEST procactivity_tracer_ls");
 
         // create Trace instance manually
         // fed it "ls"
-        let config= Args::from({Args { 
-            syscall_number: false, 
-            attach: None, 
-            no_abbrev: false, 
-            string_limit: None, 
-            file: None, 
-            summary_only: false, 
-            summary: false, 
-            successful_only: false, 
-            failed_only: false, 
-            env: Vec::new(), 
-            username: None, 
+        let config= Args::from({Args {
             follow_forks: true, 
-            syscall_times: false, 
-            expr: Vec::new(), 
-            json: false, 
             collapse_exec_retries: false, 
             command: Some(ArgCommand::Command(vec![])),
         }});
 
         let child_pid = {
             match unsafe { fork() } {
-                Ok(ForkResult::Child) => return run_tracee(&command, &config.env, &None),
+                Ok(ForkResult::Child) => return run_tracee(&command),
                 Ok(ForkResult::Parent { child }) => child,
                 Err(err) => bail!("fork() failed: {err}"),
             }
@@ -77,12 +63,12 @@ mod tests {
 
         let output: Box<dyn Write> = Box::new(std::io::stdout());
 
-        println!("TEST lurk_tracer_ls - tracer.run_tracer");
+        println!("TEST procactivity_tracer_ls - tracer.run_tracer");
 
         let mut tracer = Tracer::new(child_pid, config, output)?;
         let _ = tracer.run_tracer();
 
-        println!("TEST lurk_tracer_ls - after tracer.run_tracer");
+        println!("TEST procactivity_tracer_ls - after tracer.run_tracer");
 
         // get tracer.syscall_infos.
         let syscalls = tracer.syscall_infos;
@@ -101,28 +87,14 @@ mod tests {
         let command = [String::from("cat"), String::from(".gitignore")];
 
         let config= Args::from({Args { 
-            syscall_number: false, 
-            attach: None, 
-            no_abbrev: false, 
-            string_limit: None, 
-            file: None, 
-            summary_only: false, 
-            summary: false, 
-            successful_only: false, 
-            failed_only: false, 
-            env: Vec::new(), 
-            username: None, 
             follow_forks: true, 
-            syscall_times: false, 
-            expr: Vec::new(), 
-            json: false, 
             collapse_exec_retries: false,
             command: Some(ArgCommand::Command(vec![])),
         }});
 
         let child_pid = {
             match unsafe { fork() } {
-                Ok(ForkResult::Child) => return run_tracee(&command, &config.env, &None),
+                Ok(ForkResult::Child) => return run_tracee(&command),
                 Ok(ForkResult::Parent { child }) => child,
                 Err(err) => bail!("fork() failed: {err}"),
             }
@@ -156,28 +128,14 @@ mod tests {
         let command = [String::from("less"), String::from(".gitignore")];
 
         let config= Args::from({Args { 
-            syscall_number: false, 
-            attach: None, 
-            no_abbrev: false, 
-            string_limit: None, 
-            file: None, 
-            summary_only: false, 
-            summary: false, 
-            successful_only: false, 
-            failed_only: false, 
-            env: Vec::new(), 
-            username: None, 
             follow_forks: true, 
-            syscall_times: false, 
-            expr: Vec::new(), 
-            json: false, 
             collapse_exec_retries: false,
             command: Some(ArgCommand::Command(vec![])),
         }});
 
         let child_pid = {
             match unsafe { fork() } {
-                Ok(ForkResult::Child) => return run_tracee(&command, &config.env, &None),
+                Ok(ForkResult::Child) => return run_tracee(&command),
                 Ok(ForkResult::Parent { child }) => child,
                 Err(err) => bail!("fork() failed: {err}"),
             }
@@ -210,29 +168,15 @@ mod tests {
     fn tracer_simple_write() -> Result<(), Error> {
         let command = [String::from("tests/simple-write.sh")];
 
-        let config= Args::from({Args { 
-            syscall_number: false, 
-            attach: None, 
-            no_abbrev: false, 
-            string_limit: None, 
-            file: None, 
-            summary_only: false, 
-            summary: false, 
-            successful_only: false, 
-            failed_only: false, 
-            env: Vec::new(), 
-            username: None, 
+        let config= Args::from({Args {
             follow_forks: true, 
-            syscall_times: false, 
-            expr: Vec::new(), 
-            json: false, 
             collapse_exec_retries: false,
             command: Some(ArgCommand::Command(vec![])),
         }});
 
         let child_pid = {
             match unsafe { fork() } {
-                Ok(ForkResult::Child) => return run_tracee(&command, &config.env, &None),
+                Ok(ForkResult::Child) => return run_tracee(&command),
                 Ok(ForkResult::Parent { child }) => child,
                 Err(err) => bail!("fork() failed: {err}"),
             }

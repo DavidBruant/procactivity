@@ -1,56 +1,66 @@
-use std::fs::OpenOptions;
-use std::io::{BufWriter, Write};
+use std::io::{Write};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Result, bail};
 use clap::{CommandFactory, Parser};
-use nix::sys::ptrace;
-use nix::unistd::{fork, ForkResult, Pid};
+use nix::unistd::{fork, ForkResult};
 
 use procactivity::args::{ArgCommand, Args};
 use procactivity::{run_tracee, Tracer};
 
 
-
 fn main() -> Result<()> {
-    
-    todo!("Nettoyer les arguments + afficher les 3 listes");
-    
+        
     let config = Args::parse();
     let pid = if let Some(ArgCommand::Command(command)) = &config.command {
         if command.is_empty() {
             Args::command().print_help()?;
             return Ok(());
         }
-        if config.attach.is_some() {
-            bail!("The -p/--attach option cannot be used with a command");
-        }
         // FIXME: I suspect this breaks Rust's safety: fork() spawn a thread and that thread
         //        is accessing the same memory as the parent thread (command/env/username/config)
         match unsafe { fork() } {
-            Ok(ForkResult::Child) => return run_tracee(command, &config.env, &config.username),
+            Ok(ForkResult::Child) => return run_tracee(command),
             Ok(ForkResult::Parent { child }) => child,
             Err(err) => bail!("fork() failed: {err}"),
         }
-    } else if let Some(pid) = config.attach {
-        let pid = Pid::from_raw(pid);
-        ptrace::attach(pid).with_context(|| format!("Unable to attach to process {pid}"))?;
-        pid
     } else {
         Args::command().print_help()?;
         return Ok(());
     };
 
     // TODO: we may also add a --color option to force colors, and a --no-color option to disable it
-    let output: Box<dyn Write> = if let Some(filepath) = &config.file {
-        Box::new(BufWriter::new(
-            OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(filepath)?,
-        ))
-    } else {
-        Box::new(std::io::stdout())
+    let output: Box<dyn Write> = Box::new(std::io::stdout());
+
+    let mut tracer = match Tracer::new(pid, config, output)  {
+        Err(_) => panic!("Error during Tracer::new"),
+        Ok(t) => t
     };
 
-    Tracer::new(pid, config, output)?.run_tracer()
+    let _ = tracer.run_tracer();
+
+    // display output
+    println!("__Files attempted to be opened (openat syscall):__");
+
+    let attempted_opened_filepaths = tracer.get_opened_files().unwrap();
+    for filepath in attempted_opened_filepaths {
+        println!("{}", filepath);
+    }
+
+
+    println!("\n__Files read (read syscall)__");
+
+    let read_filepaths = tracer.get_read_files().unwrap();
+    for filepath in read_filepaths {
+        println!("{}", filepath);
+    }
+
+    
+    println!("\n__Files written to (write syscall)__");
+    
+    let written_to_filepaths = tracer.get_written_files().unwrap();
+    for filepath in written_to_filepaths.clone() {
+        println!("{}", filepath);
+    }
+
+    Ok(())
 }
